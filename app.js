@@ -50,7 +50,11 @@ app.use(function(err, req, res, next) {
 //   });
 // })
 
-require('./wssvr')
+require('./wssvr');
+require('./devicesvr');
 
+var bridgeKey = '8888';
+var bridgeMgr = require('./bridge/bridge')
+bridgeMgr.createBridge(bridgeKey);
 
 module.exports = app;

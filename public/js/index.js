@@ -5,10 +5,14 @@ $(document).ready(function(){
 	var ws = new WebSocket(url);
 	ws.onopen = function () {
 		console.log('ws onopen');
-	    ws.send('from client: hello');
+	    ws.send('bind:8888');
 	};
 	ws.onmessage = function (e) {
 		console.log('ws onmessage');
 		console.log('from server: ' + e.data);
 	};
+
+	$('#btn').click(function(){
+		ws.send("I clicked a button from browser.")
+	});
 });
