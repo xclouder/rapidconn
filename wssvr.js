@@ -29,24 +29,21 @@ server.on('connection', function connection(ws, req) {
 
   ws.on('message', function incoming(message) {
 
-    // if (message)
-    // {
-      if (message.toString() == bindMsg)
+    if (message.toString() == bindMsg)
+    {
+      bridge = bridgeMgr.bindWebSocket(ws, code);
+    }
+    else
+    {
+      if (bridge != null)
       {
-        bridge = bridgeMgr.bindWebSocket(ws, code);
+        bridge.send(ws, message);
       }
       else
       {
-        if (bridge != null)
-        {
-          bridge.send(ws, message);
-        }
-        else
-        {
-          console.error("bridge is null");
-        }
+        console.error("bridge is null");
       }
-    // }
+    }
     
 
     // console.log('received: %s from %s', message, clientName);
@@ -60,6 +57,11 @@ server.on('connection', function connection(ws, req) {
 
   });
 
+  ws.onclose = function(){
+    bridgeMgr.unbindWebSocket(ws);
+  };
 });
+
+
 
 module.exports = server;

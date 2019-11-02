@@ -15,25 +15,26 @@ server.on('connection', (socket) => {
 
     console.log("[devicesvr]receive data:%s", data);
 
-    // if (data)
-    // {
-      if (data.toString() == bindMsg)
+    if (data.toString() == bindMsg)
+    {
+      bridge = bridgeMgr.bindDeviceSocket(socket, code);
+    }
+    else
+    {
+      if (bridge != null)
       {
-        bridge = bridgeMgr.bindDeviceSocket(socket, code);
+        bridge.send(socket, data);
       }
       else
       {
-        if (bridge != null)
-        {
-          bridge.send(socket, data);
-        }
-        else
-        {
-          console.error("bridge is null");
-        }
+        console.error("bridge is null");
       }
-    // }
+    }
 
+  });
+
+  socket.on('end', ()=>{
+    bridgeMgr.unbindDeviceSocket(socket);
   });
 });
 server.listen(8081, () => {

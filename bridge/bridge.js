@@ -1,6 +1,9 @@
 var BridgeState = {
 	UnBind:0,
 	Binded:1,
+
+    //暂时不用这个值
+    Closed:2,
 }
 
 class Bridge
@@ -44,6 +47,8 @@ class Bridge
     {
     	this.webSocket = null;
     	this.state = BridgeState.UnBind;
+
+        console.log("unbind web socket, key:" + this.bridgeKey);
     }
 
     bindDeviceSocket(socket)
@@ -59,6 +64,14 @@ class Bridge
     	console.log("device socket binded, key:" + this.bridgeKey);
 
     	this.updateState();
+    }
+
+    unbindDeviceSocket(socket)
+    {
+        this.socket = null;
+        this.state = BridgeState.UnBind;
+
+        console.log("unbind device socket, key:" + this.bridgeKey);
     }
 
     send(senderSocket, data)
@@ -84,6 +97,7 @@ class BridgeManager {
 	constructor()
 	{
 		this.bridgeMap = {};
+        this.socket2KeyMap = {};
 	}
 
 	createBridge(bridgeKey)
@@ -111,6 +125,8 @@ class BridgeManager {
 		var bridge = this.bridgeMap[bridgeKey];
 		bridge.bindWebSocket(webSocket);
 
+        this.registerSocketAndKey(webSocket, bridgeKey);
+
 		return bridge;
 	}
 
@@ -125,8 +141,74 @@ class BridgeManager {
 		var bridge = this.bridgeMap[bridgeKey];
 		bridge.bindDeviceSocket(deviceSocket);
 
+        this.registerSocketAndKey(deviceSocket, bridgeKey);
+
 		return bridge;
 	}
+
+    registerSocketAndKey(socket, key)
+    {
+        if (this.socket2KeyMap.hasOwnProperty(socket))
+        {
+            console.error("already contains the socket, ignore regist");
+            return;
+        }
+
+        this.socket2KeyMap[socket] = key;
+    }
+
+    unregisterSocketAndKey(socket, key)
+    {
+        if (!this.socket2KeyMap.hasOwnProperty(socket))
+        {
+            console.error("socket not registered, ignore");
+            return;
+        }
+
+        delete this.socket2KeyMap[socket];
+    }
+
+    unbindDeviceSocket(deviceSocket)
+    {
+        if (this.socket2KeyMap.hasOwnProperty(deviceSocket))
+        {
+            var key = this.socket2KeyMap[deviceSocket];
+
+            var bridge = this.bridgeMap[key];
+            if (bridge)
+            {
+                bridge.unbindDeviceSocket(deviceSocket);
+                //todo是否需要delete bridge?
+
+                this.unregisterSocketAndKey(deviceSocket, key);
+            }
+            else
+            {
+                console.error("cannot find bridge with key:" + key);
+            }
+        }
+    }
+
+    unbindWebSocket(webSocket)
+    {
+        if (this.socket2KeyMap.hasOwnProperty(webSocket))
+        {
+            var key = this.socket2KeyMap[webSocket];
+
+            var bridge = this.bridgeMap[key];
+            if (bridge)
+            {
+                bridge.unbindWebSocket(webSocket);
+                //todo是否需要delete bridge?
+
+                this.unregisterSocketAndKey(webSocket, key);
+            }
+            else
+            {
+                console.error("cannot find bridge with key:" + key);
+            }
+        }
+    }
 
 };
 
